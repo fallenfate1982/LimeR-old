@@ -1,0 +1,12 @@
+<loader version="1.0" >
+<application id="LimeRadar">
+<name>LimeRadar</name>
+<description></description>
+<version>2.0.0.1</version>
+<vendor>Aura-tech Solutions</vendor>
+<fileset Java="1.45">
+<directory></directory>
+<files>LimeRadar.cod</files>
+</fileset>
+</application>
+</loader>

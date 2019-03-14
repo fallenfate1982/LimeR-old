@@ -1,0 +1,121 @@
+﻿<!DOCTYPE html>
+
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <meta name="format-detection" content="telephone=no" />
+        <!--<meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
+      -->  
+        <script type="text/javascript" src="js/webworks.js"></script>
+        <script type="text/javascript" src="cordova-2.6.0.js"></script>
+
+        <script type="text/javascript" src="js/jquery-1.7.1.js"></script>
+        
+        <script type="text/javascript" src="js/index.js"></script>
+
+        <title>Lime Radar</title>
+        
+        <script type="text/javascript">
+
+            //document.addEventListener("deviceready", loader, false);
+            var options = { maximumAge: 0, enableHighAccuracy: true };
+
+            function loader() {
+                   SetDeviceId();
+
+               }
+
+               function run() {
+                   
+                    navigator.geolocation.getCurrentPosition(win, fail,options);
+
+               } 
+
+
+                function win(position) {                          // Grab coordinates object from the Position object passed into success callback.
+                   var coords = position.coords;
+                   var date = new Date();
+                   var str =  date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds();
+                   var element = document.getElementById('watch');
+
+                   document.getElementById('points').setAttribute('value', str + " " + coords.latitude + "," + coords.longitude);
+
+                   var opt = new Option(str + " " + Math.round(coords.latitude *10000)/10000 + "," + Math.round(coords.longitude*10000)/10000, "", false, true);
+                   element.options.add(opt);
+                   var deviceId = GetDeviceId();
+                   //var server = "http://fallenfate-pc:22736/default.aspx";
+                   //var server = "http://zord.auratechtt.com:8099/default.aspx";
+                   //alert("test");
+                   $.get(
+                      "http://zord.auratechtt.com:8099/default.aspx",
+                      {
+                          
+                          id: deviceId,
+                          lat: coords.latitude,
+                          lon: coords.longitude,
+                          alt: coords.altitude,
+                          accu: coords.altitudeAccuracy,
+                          head: coords.heading,
+                          speed: coords.speed,
+                          time: coords.timestamp
+                      },
+                      function (data) {
+                          //alert(data);
+                          var append = " - Problems Sending!!";
+                          if (data == "hello") {
+                              append = " - Successfully Sent!!";
+                          }
+                          opt.text += append;
+                          //alert(opt.text);
+                         
+                      }
+                  );
+                  
+                }
+
+              function fail(e) {
+                   document.getElementById('points').setAttribute('value', 'Can\'t retrieve position.\nError: ' + e);
+               }
+
+
+               function onSuccess(position) {
+                   var coords = position.coords;
+                   var element = document.getElementById('watch');
+
+                   var date = new Date();
+                   var str = date.getFullYear() + "-" + date.getMonth() + "-" + date.getDate() + " " + date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds();
+
+
+                   element.options.add(new Option(str + " " + coords.latitude + "," + coords.longitude,"",false,true));
+
+                  
+               }
+
+               // onError Callback receives a PositionError object
+               //
+               function onError(error) {
+                   alert('code: '    + error.code    + '\n' +
+                         'message: ' + error.message + '\n');
+               }
+
+              
+
+          </script>
+    </head>
+    <body onload ="loader();" >
+    	<input type="button" id="points"/>
+
+        <select id ="watch"><option>test0</option></select>
+
+        <label id="lblDeviceId" >Device ID</label>
+
+        <input type="button" id="getpos" value ="Track using get position" onclick ="setInterval(run, 60000); $('#getpos').hide(); $('#watchpos').hide();"/>
+
+        <input type="button" id="watchpos" value ="Track using watch position" onclick ="navigator.geolocation.watchPosition(win, onError, options); $('#getpos').hide(); $('#watchpos').hide();"/>
+
+    	<img id="map" />
+        
+        
+      
+    </body>
+</html>

@@ -1,0 +1,141 @@
+﻿<!DOCTYPE html>
+
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <meta name="format-detection" content="telephone=no" />
+        <!--<meta name="viewport" content="user-scalable=no, initial-scale=2, maximum-scale=2, minimum-scale=2, width=device-width, height=device-height, target-densitydpi=device-dpi" />
+         -->
+        <script>
+             var meta = document.createElement("meta");
+             meta.setAttribute('name', 'viewport');
+             meta.setAttribute('content', 'initial-scale=' + (1 / window.devicePixelRatio) + ',user-scalable=no');
+             document.getElementsByTagName('head')[0].appendChild(meta);
+    </script>
+        
+        <link type="text/css" href ="css/index.css" rel ="stylesheet" />
+
+        <script type="text/javascript" src="js/webworks.js"></script>
+        <script type="text/javascript" src="cordova-2.6.0.js"></script>
+
+        <script type="text/javascript" src="js/jquery-1.7.1.js"></script>
+        
+        <script type="text/javascript" src="js/index.js"></script>
+
+        <title>Lime Radar</title>
+        
+        <script type="text/javascript">
+
+            document.addEventListener("deviceready", runner, false);
+            var options = { maximumAge: 0, enableHighAccuracy: true };
+
+            function loaderMain() {
+                runner();
+
+               }
+
+            function onBackKeyDown() {
+            }
+
+            function runner() {
+                document.addEventListener("backbutton", onBackKeyDown, false);
+                SetDeviceId();
+                run();
+                setInterval(run, 60000);
+            }
+
+               function run() {
+                   
+                    navigator.geolocation.getCurrentPosition(win, fail,options);
+
+               } 
+
+
+                function win(position) {                          // Grab coordinates object from the Position object passed into success callback.
+                   var coords = position.coords;
+                   var date = new Date();
+                   var str =  date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds();
+                 
+                   window.localStorage.setItem("lastPos", str + " " + coords.latitude + "," + coords.longitude);
+                   document.getElementById('points').setAttribute('value', str + " " + coords.latitude + "," + coords.longitude);
+
+                   //var opt = new Option(str + " " + Math.round(coords.latitude *10000)/10000 + "," + Math.round(coords.longitude*10000)/10000, "", false, true);
+                   //element.options.add(opt);
+                   var deviceId = ""+GetDeviceId();
+                   
+                    //"http://zord.auratechtt.com:8099/default.aspx"
+                   // http://fallenfate-pc:22736/default.aspx
+                   $.get(
+                       "http://zord.auratechtt.com:8099/default.aspx",
+                      {
+                          id: deviceId,
+                          lat: coords.latitude,
+                          lon: coords.longitude,
+                          alt: coords.altitude,
+                          accu: coords.altitudeAccuracy,
+                          head: coords.heading,
+                          speed: coords.speed,
+                          time: coords.timestamp
+                      },
+                      function (data) {
+                          var json_parsed = $.parseJSON(data);
+                          
+                          if (json_parsed.Trackers) {
+                              window.localStorage.setItem("lastPosSucc", str + " " + coords.latitude + "," + coords.longitude);
+                              createButtons(json_parsed.Trackers);
+                          }
+                      }
+                  );
+                  
+                }
+
+              function fail(e) {
+                   document.getElementById('points').setAttribute('value', 'Can\'t retrieve position.\nError: ' + e);
+               }
+
+
+               function createButtons(trackers) {
+                   if (trackers.length!=0) {
+                       $("#contTrackers").empty();
+                       for (index = 0; index < trackers.length; index++) {
+                           var number = trackers[index].Id;
+                           var name = trackers[index].Name;
+                           var lastCheckIn = trackers[index].LastUpdate;
+                           var distance = Math.round(trackers[index].Distance);
+
+                           var str = number + " " + name + " Last Check in: " + lastCheckIn + " Distance: " + distance + "km";
+
+                           var button = $('<br/><a id = "' + number + '">' + str + '</a>').attr("href", "tel:" + number).addClass("likeabutton");
+
+                           $("#contTrackers").append(button);
+                       }
+                   }
+               }
+
+          </script>
+    </head>
+    <body>
+    	<input type="button" id="points"/>
+        <label id="lblDeviceId" >Device ID</label>
+
+      
+        <input type ="button" value ="Force Checkin" onclick ="run();" />
+        <input type ="button" value ="Get Last Information" onclick ="getLastInfo();" />
+
+        <label id="lblLasPos" >Device ID</label>
+        <label id="lblLasSucc" >Device ID</label>
+
+        <input type ="button" value ="Change Device ID" onclick ="ChangeDeviceID();" />
+        <input type ="button" value ="Change Proximity" onclick ="ChangeDistance();" />
+
+
+        <div id="contTrackers">
+
+
+
+        </div>
+        
+        
+      
+    </body>
+</html>
